@@ -99,14 +99,29 @@ class AGALMiniAssembler {
 
 			// grab options
 			reg = ~/<.*>/g;
-			var optsi : Int = -1;
-			if (reg.match(line)) optsi = reg.matchedPos().pos;
-			var opts : String = "";
-			if (optsi != -1) {
-				reg = ~/([\w\.\-\+]+)/gi;
-				reg.match(line.substr(optsi));
-				opts = reg.matched(0);
+			var optsi:Int = -1,
+				options:String = new String(line);
+			if (reg.match(options))
+				optsi = reg.matchedPos().pos;
+				
+			var opts:Array<String> = [];
+			if (optsi != -1)
+			{
 				line = line.substr(0, optsi);
+				while (optsi != -1)
+				{
+					options = options.substr(optsi);
+					
+					reg = ~/([\w\.\-\+]+)/gi;
+					reg.match(options);
+					
+					opts.push(reg.matched(0));
+					
+					if (reg.match(options))
+						optsi = reg.matchedPos().pos;
+					else
+						break;
+				}
 			}
 
 			// find opcode
@@ -321,17 +336,31 @@ class AGALMiniAssembler {
 						var optsLength:UInt = opts.length;
 						var bias:Float = 0;
 						var k : Int = 0;
-						while (k < Std.int(optsLength)) {
-							if (verbose) trace("    opt: " + opts.charAt(k));
-							var optfound : Sampler = SAMPLEMAP.get(opts.charAt(k));
-							if (optfound == null) {
+						while (k < Std.int(optsLength))
+						{
+							if (verbose)
+							{
+								trace("    opt: " + opts[k]);
+							}
+								
+							var optfound:Sampler = SAMPLEMAP.get(opts[k]);
+							if (optfound == null)
+							{
 								// todo check that it's a number...
 								//trace( "Warning, unknown sampler option: "+opts[k] );
-								bias = Std.parseFloat(opts.charAt(k));
-								if (verbose) trace("    bias: " + bias);
+								bias = Std.parseFloat(opts[k]);
+								if (verbose)
+								{
+									trace("    bias: " + bias);
+								}
 							}
-							else {
-								if (optfound.flag() != SAMPLER_SPECIAL_SHIFT) samplerbits &= ~(0xf << optfound.flag());
+							else
+							{
+								if (optfound.flag() != SAMPLER_SPECIAL_SHIFT)
+								{
+									samplerbits &= ~(0xf << optfound.flag());
+								}
+								
 								samplerbits |= optfound.mask() << optfound.flag();
 							}
 							++k;
